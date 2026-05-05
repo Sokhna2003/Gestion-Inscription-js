@@ -57,7 +57,7 @@ elements.formulaireEtu.addEventListener("submit", (event) => {
         showToast("Étudiant mis à jour !");
         editingId = null; // On oublie l'ID pour que le prochain clic soit un "Ajout"
 
-    } else {
+    } else { 
         // Ajout
         const nouvelEtu = { ...nouvelEtudiant, id: Date.now(), etat: true } // On crée un nouvel ID et son etat par defaut est true
         listeEtudiants.push(nouvelEtu); // On ajoute le nouvel étudiant à notre tableau local
