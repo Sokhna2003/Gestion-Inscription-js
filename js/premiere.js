@@ -1,4 +1,3 @@
-
 import { elements } from './DOM/element.js';
 import { saveEtudiants, loadEtudiants } from './Stores/etudiantStores.js';
 import { openModal, closeModal } from './UI/modalRenderer.js';
@@ -11,12 +10,10 @@ import { renderArchives } from './UI/archiveRenderer.js';
 
 // ID de l'etudiant en cours de modification
 let editingId = null;
-let archiveId = null; // Pour stocker l'ID de celui qu'on veut archiver
 
-// au chargement on récupère ce qui est stocké ( ou un tableau vide si rien n'existe)
-let listeEtudiants = loadEtudiants();
+let archiveId = null;
 
-// OUVERTURE / FERMETURE MODAL AJOUT
+// OUVERTURE / FERMETURE
 elements.btnAddEtudiant.addEventListener('click', openModal);
 elements.btnCloseModal.addEventListener('click', closeModal);
 
@@ -27,11 +24,13 @@ window.addEventListener('click', (e) => {
     }
 });
 
+// On récupère ce qui est stocké (ou un tableau vide si rien n'existe)
+let listeEtudiants = loadEtudiants();
+
 // On parcourt la liste pour créer chaque ligne dans le tableau
-// listeEtudiants.forEach(etu => {
-//     createEtudiant(etu);
-// });
-refreshUI();
+listeEtudiants.forEach(etu => {
+    createEtudiant(etu);
+});
 
 elements.formulaireEtu.addEventListener("submit", (event) => {
     event.preventDefault()
@@ -59,7 +58,7 @@ elements.formulaireEtu.addEventListener("submit", (event) => {
 
     } else {
         // Ajout
-        const nouvelEtu = { ...nouvelEtudiant, id: Date.now(), etat: true } // On crée un nouvel ID et son etat par defaut est true
+        const nouvelEtu = { ...nouvelEtudiant, id: Date.now() } // On crée un nouvel ID
         listeEtudiants.push(nouvelEtu); // On ajoute le nouvel étudiant à notre tableau local
         showToast("Étudiant ajouté avec succès !");
     }
@@ -68,10 +67,8 @@ elements.formulaireEtu.addEventListener("submit", (event) => {
     saveEtudiants(listeEtudiants);
 
     //  On vide le tableau HTML et on le recrée entièrement avec la liste à jour
-    // elements.etudiantTable.innerHTML = "";
-    // listeEtudiants.forEach(etu => createEtudiant(etu));
-    saveEtudiants(listeEtudiants)
-    refreshUI()
+    elements.etudiantTable.innerHTML = "";
+    listeEtudiants.forEach(etu => createEtudiant(etu));
 
     // on ferme et on vide
     closeModal()
@@ -84,7 +81,6 @@ elements.etudiantTable.addEventListener('click', (e) => {
     const btnEdit = e.target.closest('.btn-edit')
     // Si on clique sur le bouton delete
     const btnDelete = e.target.closest('.btn-delete')
-
     if (btnEdit) {
         // On récupère l'ID depuis la ligne (tr)
         const row = btnEdit.closest('tr')
@@ -99,7 +95,7 @@ elements.etudiantTable.addEventListener('click', (e) => {
             openModal();                   // On ouvre la modale
         }
     }
-    if (btnDelete) {
+    if (btndDelete) {
         const row = btnDelete.closest('tr');
         archiveId = Number(row.dataset.id);     //On mémorise l'ID
         // On ouvre le modal de confirmation
@@ -107,84 +103,67 @@ elements.etudiantTable.addEventListener('click', (e) => {
     }
 });
 
-// Fermer le modal de confirmation au clic sur "Annuler"
+let archives = loadArchives();
+
+// OUVRE LE DRAWER
+elements.btnOpenArchives.addEventListener('click', () => {
+    renderArchives(archives);
+    document.getElementById("drawerArchives").classList.remove('translate-x-full');
+    document.getElementById("overlayArchives").classList.remove('hidden');
+});
+
+// FERME LE DRAWER
+const closeDrawer = () => {
+    document.getElementById("drawerArchives").classList.add('translate-x-full');
+    document.getElementById("overlayArchives").classList.add('hidden');
+};
+document.getElementById("btnCloseDrawer").addEventListener('click', closeDrawer);
+document.getElementById("overlayArchives").addEventListener('click', closeDrawer);
+
+// GESTION DES CHECKBOXES (Affiche le bouton si >= 3)
+document.getElementById("archiveList").addEventListener('change', () => {
+    const selected = document.querySelectorAll('.check-archive:checked');
+    const footer = document.getElementById("footerDrawer");
+    const countSpan = document.getElementById("countSelected");
+    
+    countSpan.textContent = selected.length;
+
+    if (selected.length >= 3) {
+        footer.classList.remove('hidden');
+    } else {
+        footer.classList.add('hidden');
+    }
+});
+
+
+// Bouton Annuler du modal
 elements.btnCancelDelete.addEventListener('click', () => {
     elements.modalConfirmDelete.classList.add('hidden');
-    archiveId = null; // On réinitialise l'ID par sécurité
+    idAArchiver = null;
 });
-
-// Fermer si on clique en dehors du modal
-window.addEventListener('click', (e) => {
-    if (e.target === elements.modalConfirmDelete) {
-        elements.modalConfirmDelete.classList.add('hidden');
-        archiveId = null;
-    }
-});
-
-// OUVRIR / FERMER LE DRAWER
-elements.btnOpenArchives.addEventListener('click', () => {
-    const archives = listeEtudiants.filter(etu => etu.etat === false); // On filtre en direct
-    renderArchives(archives); 
-    elements.drawerArchives.classList.remove('translate-x-full');
-    elements.overlayArchives.classList.remove('hidden');
-});
-
-elements.btnCloseDrawer.addEventListener('click', () => {
-    elements.drawerArchives.classList.add('translate-x-full');
-    elements.overlayArchives.classList.add('hidden');
-});
-
-// LOGIQUE D'ARCHIVAGE
+// Bouton Confirmer (Archiver) du modal
 elements.btnConfirmDelete.addEventListener('click', () => {
-        const etudiant = listeEtudiants.find(etu => etu.id === archiveId);
-        if (etudiant) {
-            etudiant.etat = false; // On change l'état
-            saveEtudiants(listeEtudiants); // On enregistre la liste unique
-
-            // On rafraîchit les deux affichages
-            refreshUI();
-
-            elements.modalConfirmDelete.classList.add('hidden');
-            showToast("Étudiant archivé !");
-        }
-
-});
-
-// RESTAURER DEPUIS LES ARCHIVES
-document.getElementById('archiveList').addEventListener('click', (e) => {
-    const btnRestore = e.target.closest('.btn-restore'); // On cherche le bouton
-    if (btnRestore) {
-        const id = Number(btnRestore.dataset.id); // ON RÉCUPÈRE L'ID ICI
-        const etudiant = listeEtudiants.find(etu => etu.id === id);
+    if (archiveId) {
+        const etu = listeEtudiants.find(e => e.id === archiveId);
         
-        if (etudiant) {
-            etudiant.etat = true; 
+        if (etu) {
+            // Ajouter aux archives
+            archives.push(etu);
+            saveArchives(archives);
+          
+            // Retirer de la liste principale
+            listeEtudiants = listeEtudiants.filter(e => e.id !== archiveId);
             saveEtudiants(listeEtudiants);
-            refreshUI(); // Ça va vider et redessiner les deux côtés
-            showToast("Étudiant restauré !");
+
+            // Mettre à jour l'affichage
+            elements.etudiantTable.innerHTML = "";
+            listeEtudiants.forEach(et => createEtudiant(et));
+            
+            showToast("Étudiant archivé !", "success");
         }
     }
+    // Fermer le modal
+    elements.modalConfirmDelete.classList.add('hidden');
+    archiveId = null;
 });
-
-
-// Fermer le drawer si on clique sur le fond sombre (l'overlay)
-elements.overlayArchives.addEventListener('click', () => {
-    // On fait repartir le drawer vers la droite
-    elements.drawerArchives.classList.add('translate-x-full');
-    // on cache le fond sombre
-    elements.overlayArchives.classList.add('hidden');
-});
-
-function refreshUI() {
-    // On vide les deux conteneurs
-    elements.etudiantTable.innerHTML = "";
-    
-    // on affiche les actifs (etat === true) dans le tableau
-    const actifs = listeEtudiants.filter(etu => etu.etat === true);
-    actifs.forEach(etu => createEtudiant(etu));
-
-    // on affiche les archivés (etat === false) dans le drawer
-    const archives = listeEtudiants.filter(etu => etu.etat === false);
-    renderArchives(archives); 
-}
 
