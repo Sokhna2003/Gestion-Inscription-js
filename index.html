@@ -1,11 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-    
+
+
+<body class="flex min-h-screen font-sans text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#e6a35c] flex flex-col p-6 shadow-lg">
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-16 h-16 bg-black rounded-full mb-3 flex items-center justify-center">
+                <i class="fas fa-leaf text-green-500 text-2xl"></i>
+            </div>
+            <h1 class="text-xl font-bold">Gestion Inscription</h1>
+        </div>
+
+        <nav class="space-y-4">
+            <a href="#" class="flex items-center space-x-3 p-2 hover:bg-[#d48f4a] rounded transition">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 p-2 bg-[#d48f4a] rounded transition">
+                <i class="fas fa-list"></i>
+                <span class="font-semibold">Listes Etudiants</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col p-6 overflow-hidden">
+
+        <!-- Header / Topbar -->
+        <header class="bg-[#e6a35c] rounded-xl p-3 mb-6 shadow-md flex items-center justify-between">
+            <div class="flex items-center space-x-4 flex-1">
+                <button class="p-2"><i class="fas fa-bars"></i></button>
+                <div class="relative w-1/2">
+                    <input type="text" placeholder="search"
+                        class="w-full bg-[#fdeedc] border-none rounded-full px-4 py-1 focus:ring-2 focus:ring-orange-400 outline-none shadow-inner">
+                    <i class="fas fa-search absolute right-4 top-2 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-bell"></i>
+                <div class="flex items-center space-x-2 border-l border-orange-700 pl-4">
+                    <div class="text-right">
+                        <p class="text-xs font-bold leading-tight">Bonjour Administrateur !</p>
+                        <p class="text-[10px] uppercase">Admin</p>
+                    </div>
+                    <img src="https://pravatar.cc" alt="Admin"
+                        class="w-10 h-10 rounded-full border-2 border-orange-200">
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Title & Actions -->
+        <div
+            class="bg-[#fee6cc] rounded-xl p-4 mb-6 shadow-sm flex justify-between items-center border border-orange-100 border-l-[6px] border-l-[#ef6c33]">
+            <h2 class="text-xl font-bold">Listes Des Etudiants</h2>
+            <div class="space-x-2"> 
+                <button id="btnOpenArchives"
+                    class="bg-[#ef6c33] text-white px-6 py-1.5 rounded-lg text-sm font-semibold shadow-md hover:bg-[#d45a27]">Archives</button>
+                <button id="btnAddEtudiant"
+                    class="bg-[#ef6c33] text-white px-6 py-1.5 rounded-lg text-sm font-semibold shadow-md hover:bg-[#d45a27]">ajouter
+                    etudiant <span class="ml-1 text-xs">+</span></button>
+            </div>
+        </div>
+
+        <!-- Search Table Area -->
+        <div class="bg-[#fee6cc] rounded-xl flex-1 flex flex-col shadow-sm border border-orange-100 overflow-hidden">
+            <!-- Table Search -->
+            <div class="p-6">
+                <div class="relative w-64">
+                    <input type="text" placeholder="Recherche par Nom ............."
+                        class="w-full bg-[#fff7ed] border-none rounded-lg px-4 py-2 text-sm italic shadow-inner outline-none">
+                    <i class="fas fa-search absolute right-3 top-2.5 text-orange-400"></i>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="px-6 pb-6 flex-1 overflow-auto">
+                <h3 class="font-bold mb-4">Listes Des Etudiants</h3>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-[#ef6c33] text-white">
+                        <tr>
+                            <th class="p-3 first:rounded-tl-xl">Nom</th>
+                            <th class="p-3">Prénom</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Formation</th>
+                            <th class="p-3">Adresse</th>
+                            <th class="p-3">Telephone</th>
+                            <th class="p-3">Date</th>
+                            <th class="p-3 last:rounded-tr-xl text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="etudiantTable" class="bg-white">
+                        <!-- Les étudiants s'afficheront ici -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Container (Caché par défaut avec 'hidden') -->
+    <div id="modalEtudiant"
+        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+
+        <!-- Fenêtre du Modal -->
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+
+            <!-- Header du Modal -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800">Ajout Etudiant</h3>
+                <button id="btnCloseModal" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Formulaire -->
+            <form id="formulaireEtu" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Nom</label>
+                    <input id="nom" type="text" placeholder="Entrez le nom de l'étudiant"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none">
+                    <span id="nomError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Prénom</label>
+                    <input id="prenom" type="text" placeholder="Entrez le prénom de l'étudiant"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none">
+                    <span id="prenomError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                    <div class="relative">
+                        <input id="email" type="text" placeholder="Entrez l'email de l'étudiant"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none">
+                        <i class="ri-mail-line absolute right-3 top-2 text-gray-400"></i>
+                    </div>
+                    <span id="emailError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Formation</label>
+                    <select id="formation"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none bg-white appearance-none cursor-pointer">
+                        <option value="" disabled selected>Sélectionnez une formation</option>
+                        <option value="dev-web">Développement Web</option>
+                        <option value="data">Data Science</option>
+                        <option value="design">Design UI/UX</option>
+                        <option value="marketing">Marketing Digital</option>
+                    </select>
+                    <span id="formationError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Adresse</label>
+                    <input id="adresse" type="text" placeholder="Entrez l'adresse de l'étudiant"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none">
+                    <span id="adresseError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Telephone</label>
+                    <input id="tel" type="tel" placeholder="Entrez le tel de l'étudiant"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none">
+                    <span id="telError" class="text-red-500 text-[10px] hidden font-semibold mt-1"></span>
+                </div>
+
+                <button id="btnSubmitForm" type="submit"
+                    class="w-full bg-[#ef6c33] text-white font-bold py-3 rounded-lg shadow-lg hover:bg-[#d45a27] transition-colors mt-4">
+                    Ajout Etudiant
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmation de Suppression -->
+    <div id="modalConfirmDelete"
+        class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-sm text-center transform transition-all">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-archive text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Archiver l'étudiant ?</h3>
+            <p class="text-gray-500 text-sm mb-6">L'étudiant sera déplacé vers les archives. Vous pourrez le restaurer
+                plus tard</p>
+
+            <div class="flex space-x-3">
+                <button id="btnCancelDelete"
+                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition">
+                    Annuler
+                </button>
+                <button id="btnConfirmDelete"
+                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-lg transition">
+                    Archiver
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Conteneur de Toast -->
+    <div id="toastAdd"
+        class="fixed top-5 right-5 transform translate-y-[-20px] opacity-0 transition-all duration-500 pointer-events-none z-[100]">
+        <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+            <i class="ri-checkbox-circle-fill text-xl"></i>
+            <span id="toastMessageAdd" class="font-bold text-sm italic">Étudiant ajouté avec succès !</span>
+        </div>
+    </div>
+
+
+    <!-- Overlay (fond sombre quand le drawer est ouvert) -->
+    <div id="overlayArchives" class="fixed inset-0 bg-black bg-opacity-30 hidden z-40 backdrop-blur-[2px]"></div>
+
+    <!-- Drawer des Archives -->
+    <div id="drawerArchives"
+        class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l border-orange-100">
+
+        <!-- Header du Drawer -->
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-[#fee6cc]">
+            <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-archive mr-2"></i> Archives</h3>
+            <button id="btnCloseDrawer" class="text-gray-500 hover:text-red-500 text-2xl transition">&times;</button>
+        </div>
+
+        <!-- Liste des archivés -->
+        <div id="archiveList" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <!-- Les étudiants archivés seront injectés ici -->
+        </div>
+
+        <!-- Footer du Drawer avec le bouton Restaurer Tout -->
+        <div id="footerDrawer" class="p-6 border-t border-gray-100 hidden">
+            <button id="btnRestoreAll"
+                class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-green-700 transition flex items-center justify-center space-x-2">
+                <i class="fas fa-undo-alt"></i>
+                <span>Restaurer la sélection (<span id="countSelected">0</span>)</span>
+            </button>
+        </div>
+    </div>
+
+
+    <script type="module" src="./js/app.js"></script>
+
 </body>
+
 </html>
