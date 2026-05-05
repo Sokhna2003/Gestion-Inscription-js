@@ -53,7 +53,7 @@ elements.formulaireEtu.addEventListener("submit", (event) => {
         // On cherche ou se trouve l'étudiant dans notre liste JS grâce à son ID
         const index = listeEtudiants.findIndex(etu => etu.id == editingId)
         // On remplace ses anciennes infos par les nouvelles (on garde le même ID)
-        listeEtudiants[index] = { ...nouvelEtudiant, id: Number(editingId) };
+        listeEtudiants[index] = { ...nouvelEtudiant, id: Number(editingId), etat: true };
         showToast("Étudiant mis à jour !");
         editingId = null; // On oublie l'ID pour que le prochain clic soit un "Ajout"
 
